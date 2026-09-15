@@ -2,7 +2,7 @@
 
 基于 Spring Boot 的区块链加密货币支付系统学习 Demo。
 
-当前阶段（第 3 阶段）实现链上交易校验模型：校验资产、网络、合约、地址、金额、Receipt 成功状态和最低确认数。数据仍使用内存存储。
+当前阶段（第 4 阶段）支持 MySQL 持久化：默认仍使用内存存储，启用 `mysql` profile 后切换到 JPA/MySQL。
 
 ## 环境
 
@@ -64,3 +64,19 @@ curl -X POST http://localhost:8080/api/payment-intents/{paymentNo}/refresh
 ```
 
 刷新会校验网络、资产、代币合约、收款地址、金额和 Receipt 成功状态；交易确认数达到最低要求（当前为 2）后才会将支付标记为 `SUCCEEDED`。Mock 网关通过接口抽象，后续可以替换为 web3j 测试网实现。
+
+## MySQL
+
+启动数据库：
+
+```bash
+docker compose up -d mysql
+```
+
+使用 MySQL profile 启动应用：
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=mysql
+```
+
+数据库账号密码通过 `DB_USERNAME`、`DB_PASSWORD` 环境变量配置。示例密码仅用于本地学习，请勿用于生产环境或提交真实密码。
