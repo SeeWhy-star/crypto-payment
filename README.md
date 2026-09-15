@@ -129,3 +129,10 @@ curl -X POST http://localhost:8080/api/payment-intents/{paymentNo}/refunds \
 
 系统会校验订单必须为 `SUCCEEDED`，并且累计成功退款金额不能超过原订单金额。Mock 退款会立即变为 `SUCCEEDED`，暂不发送真实资金。
 携带 `Idempotency-Key` 后，重复提交同一 key 和金额会返回原退款，不会创建第二笔退款；同一 key 改用其他金额会被拒绝。默认幂等记录保存在内存，启用 `redis` profile 后保存到 Redis 24 小时。
+
+查询退款：
+
+```bash
+curl http://localhost:8080/api/payment-intents/{paymentNo}/refunds
+curl http://localhost:8080/api/refunds/{refundNo}
+```

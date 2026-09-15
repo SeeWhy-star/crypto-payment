@@ -4,6 +4,7 @@ import com.example.cryptopayment.domain.enums.PaymentIntentStatus;
 import com.example.cryptopayment.domain.enums.RefundStatus;
 import com.example.cryptopayment.domain.exception.InvalidRefundException;
 import com.example.cryptopayment.domain.exception.PaymentIntentNotFoundException;
+import com.example.cryptopayment.domain.exception.RefundNotFoundException;
 import com.example.cryptopayment.domain.model.Refund;
 import com.example.cryptopayment.domain.repository.PaymentIntentRepository;
 import com.example.cryptopayment.domain.repository.RefundRepository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
 
 @Service
 public class RefundApplicationService {
@@ -79,5 +81,16 @@ public class RefundApplicationService {
         Refund completed = new Refund(refund.refundNo(), refund.paymentNo(), refund.amount(),
                 RefundStatus.SUCCEEDED, refund.createdAt());
         return refundRepository.save(completed);
+    }
+
+    public List<Refund> findByPaymentNo(String paymentNo) {
+        paymentIntentRepository.findByPaymentNo(paymentNo)
+                .orElseThrow(() -> new PaymentIntentNotFoundException(paymentNo));
+        return refundRepository.findByPaymentNo(paymentNo);
+    }
+
+    public Refund getByRefundNo(String refundNo) {
+        return refundRepository.findByRefundNo(refundNo)
+                .orElseThrow(() -> new RefundNotFoundException(refundNo));
     }
 }

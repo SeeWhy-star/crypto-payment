@@ -150,6 +150,13 @@ class PaymentIntentControllerTest {
                 .andReturn().getResponse().getContentAsString();
 
         String refundNo = com.jayway.jsonpath.JsonPath.read(refundResponse, "$.refundNo");
+        mockMvc.perform(get("/api/payment-intents/{paymentNo}/refunds", paymentNo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].refundNo").value(refundNo))
+                .andExpect(jsonPath("$[0].amount").value(10.00));
+        mockMvc.perform(get("/api/refunds/{refundNo}", refundNo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paymentNo").value(paymentNo));
         mockMvc.perform(post("/api/payment-intents/{paymentNo}/refunds", paymentNo)
                         .header("Idempotency-Key", "refund-key-1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -163,6 +170,10 @@ class PaymentIntentControllerTest {
                         .content("{\"amount\":\"20.00\"}"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.error").value("INVALID_REFUND"));
+
+        mockMvc.perform(get("/api/refunds/re_unknown"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("REFUND_NOT_FOUND"));
     }
 
     @Test
