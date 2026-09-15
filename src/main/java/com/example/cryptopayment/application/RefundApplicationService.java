@@ -37,13 +37,15 @@ public class RefundApplicationService {
     }
 
     public Refund create(String paymentNo, CreateRefundRequest request, String idempotencyKey) {
-        if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            return createRefund(paymentNo, request);
-        }
-        String scopedKey = paymentNo + ":" + idempotencyKey;
         final Refund[] result = new Refund[1];
-        idempotencyLock.execute("refund:" + scopedKey,
-                () -> result[0] = createWithIdempotency(paymentNo, request, scopedKey));
+        idempotencyLock.execute("refund:payment:" + paymentNo, () -> {
+            if (idempotencyKey == null || idempotencyKey.isBlank()) {
+                result[0] = createRefund(paymentNo, request);
+                return;
+            }
+            String scopedKey = paymentNo + ":" + idempotencyKey;
+            result[0] = createWithIdempotency(paymentNo, request, scopedKey);
+        });
         return result[0];
     }
 
