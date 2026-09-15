@@ -35,7 +35,7 @@ public class CryptoPaymentApplicationService {
         }
         CryptoPayment payment = new CryptoPayment(paymentNo, request.asset(), request.network(),
                 request.depositAddress().trim(), request.expectedAmount(), request.tokenContract(),
-                DEFAULT_CONFIRMATIONS, null,
+                DEFAULT_CONFIRMATIONS, request.transactionHash(),
                 CryptoPaymentStatus.WAITING_PAYMENT, Instant.now());
         return cryptoPaymentRepository.save(payment);
     }

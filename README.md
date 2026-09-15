@@ -89,3 +89,14 @@ mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 docker compose up -d redis
 mvn spring-boot:run -Dspring-boot.run.profiles=redis
 ```
+
+## web3j 测试网
+
+启用 `web3j` profile 时，应用通过 `RPC_URL` 查询测试网原生 ETH 交易、Receipt 和确认数。RPC 地址必须通过环境变量提供：
+
+```powershell
+$env:RPC_URL = "https://your-sepolia-rpc.example"
+mvn spring-boot:run "-Dspring-boot.run.profiles=mysql,redis,web3j"
+```
+
+当前 web3j 网关只读取链上数据，不发送交易；USDT 的 ERC-20 Transfer 日志解析将在后续迭代加入。不要配置主网 RPC，也不要把 RPC URL、API key 或钱包私钥提交到 Git。
