@@ -2,7 +2,7 @@
 
 基于 Spring Boot 的区块链加密货币支付系统学习 Demo。
 
-当前阶段（第 0 阶段）只包含可启动的 Spring Boot 应用和健康检查端点，后续按迭代计划逐步加入 PaymentIntent、Mock 区块链、链上校验和 Webhook。
+当前阶段（第 1 阶段）实现最小支付订单：使用内存存储创建和查询 `PaymentIntent`，暂不连接区块链或数据库。
 
 ## 环境
 
@@ -20,3 +20,21 @@ mvn spring-boot:run
 ```json
 {"status":"UP"}
 ```
+
+## 支付订单接口
+
+创建订单：
+
+```bash
+curl -X POST http://localhost:8080/api/payment-intents \
+  -H "Content-Type: application/json" \
+  -d '{"amount":"12.50","currency":"USD"}'
+```
+
+查询订单：
+
+```bash
+curl http://localhost:8080/api/payment-intents/{paymentNo}
+```
+
+金额使用 `BigDecimal`，订单状态使用枚举，当前新订单状态为 `CREATED`。内存存储会在应用重启后清空，后续阶段再替换为 MySQL。
