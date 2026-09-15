@@ -5,11 +5,14 @@ import com.example.cryptopayment.domain.enums.RefundStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface RefundRepository {
     Refund save(Refund refund);
 
     List<Refund> findByPaymentNo(String paymentNo);
+
+    Optional<Refund> findByRefundNo(String refundNo);
 
     default BigDecimal sumSucceededAmount(String paymentNo) {
         return findByPaymentNo(paymentNo).stream()

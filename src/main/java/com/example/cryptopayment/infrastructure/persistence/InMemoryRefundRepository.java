@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
 
 @Repository
 @Profile("!mysql")
@@ -24,5 +25,11 @@ public class InMemoryRefundRepository implements RefundRepository {
     @Override
     public List<Refund> findByPaymentNo(String paymentNo) {
         return List.copyOf(refunds.getOrDefault(paymentNo, new CopyOnWriteArrayList<>()));
+    }
+
+    @Override
+    public Optional<Refund> findByRefundNo(String refundNo) {
+        return refunds.values().stream().flatMap(List::stream)
+                .filter(refund -> refund.refundNo().equals(refundNo)).findFirst();
     }
 }

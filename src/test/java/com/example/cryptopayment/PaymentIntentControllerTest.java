@@ -132,13 +132,24 @@ class PaymentIntentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCEEDED"));
 
-        mockMvc.perform(post("/api/payment-intents/{paymentNo}/refunds", paymentNo)
+        String refundResponse = mockMvc.perform(post("/api/payment-intents/{paymentNo}/refunds", paymentNo)
+                        .header("Idempotency-Key", "refund-key-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"amount\":\"10.00\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("SUCCEEDED"));
+                .andExpect(jsonPath("$.status").value("SUCCEEDED"))
+                .andReturn().getResponse().getContentAsString();
+
+        String refundNo = com.jayway.jsonpath.JsonPath.read(refundResponse, "$.refundNo");
+        mockMvc.perform(post("/api/payment-intents/{paymentNo}/refunds", paymentNo)
+                        .header("Idempotency-Key", "refund-key-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"amount\":\"10.00\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.refundNo").value(refundNo));
 
         mockMvc.perform(post("/api/payment-intents/{paymentNo}/refunds", paymentNo)
+                        .header("Idempotency-Key", "refund-key-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"amount\":\"20.00\"}"))
                 .andExpect(status().isUnprocessableEntity())

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @Profile("mysql")
@@ -26,6 +27,11 @@ public class JpaRefundRepository implements RefundRepository {
     @Override
     public List<Refund> findByPaymentNo(String paymentNo) {
         return delegate.findByPaymentNo(paymentNo).stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public Optional<Refund> findByRefundNo(String refundNo) {
+        return delegate.findByRefundNo(refundNo).map(this::toDomain);
     }
 
     private Refund toDomain(RefundEntity entity) {

@@ -7,6 +7,8 @@ import com.example.cryptopayment.domain.exception.PaymentIntentNotFoundException
 import com.example.cryptopayment.domain.model.Refund;
 import com.example.cryptopayment.domain.repository.PaymentIntentRepository;
 import com.example.cryptopayment.domain.repository.RefundRepository;
+import com.example.cryptopayment.domain.repository.RefundIdempotencyStore;
+import com.example.cryptopayment.domain.repository.IdempotencyLock;
 import com.example.cryptopayment.dto.CreateRefundRequest;
 import org.springframework.stereotype.Service;
 
@@ -17,14 +19,49 @@ import java.util.UUID;
 public class RefundApplicationService {
     private final PaymentIntentRepository paymentIntentRepository;
     private final RefundRepository refundRepository;
+    private final RefundIdempotencyStore idempotencyStore;
+    private final IdempotencyLock idempotencyLock;
 
     public RefundApplicationService(PaymentIntentRepository paymentIntentRepository,
-                                    RefundRepository refundRepository) {
+                                    RefundRepository refundRepository,
+                                    RefundIdempotencyStore idempotencyStore,
+                                    IdempotencyLock idempotencyLock) {
         this.paymentIntentRepository = paymentIntentRepository;
         this.refundRepository = refundRepository;
+        this.idempotencyStore = idempotencyStore;
+        this.idempotencyLock = idempotencyLock;
     }
 
     public Refund create(String paymentNo, CreateRefundRequest request) {
+        return create(paymentNo, request, null);
+    }
+
+    public Refund create(String paymentNo, CreateRefundRequest request, String idempotencyKey) {
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            return createRefund(paymentNo, request);
+        }
+        String scopedKey = paymentNo + ":" + idempotencyKey;
+        final Refund[] result = new Refund[1];
+        idempotencyLock.execute("refund:" + scopedKey,
+                () -> result[0] = createWithIdempotency(paymentNo, request, scopedKey));
+        return result[0];
+    }
+
+    private Refund createWithIdempotency(String paymentNo, CreateRefundRequest request, String key) {
+        var existing = idempotencyStore.findRefundNo(key)
+                .flatMap(refundRepository::findByRefundNo);
+        if (existing.isPresent()) {
+            if (existing.get().amount().compareTo(request.amount()) != 0) {
+                throw new InvalidRefundException("Idempotency key was already used for another refund amount");
+            }
+            return existing.get();
+        }
+        Refund refund = createRefund(paymentNo, request);
+        idempotencyStore.save(key, refund.refundNo());
+        return refund;
+    }
+
+    private Refund createRefund(String paymentNo, CreateRefundRequest request) {
         var payment = paymentIntentRepository.findByPaymentNo(paymentNo)
                 .orElseThrow(() -> new PaymentIntentNotFoundException(paymentNo));
         if (payment.status() != PaymentIntentStatus.SUCCEEDED) {
