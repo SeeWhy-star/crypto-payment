@@ -52,4 +52,37 @@ class PaymentIntentControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("PAYMENT_INTENT_NOT_FOUND"));
     }
+
+    @Test
+    void shouldRefreshMockCryptoPaymentToSucceeded() throws Exception {
+        String paymentResponse = mockMvc.perform(post("/api/payment-intents")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"amount\":\"25.00\",\"currency\":\"USD\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String paymentNo = com.jayway.jsonpath.JsonPath.read(paymentResponse, "$.paymentNo");
+
+        mockMvc.perform(post("/api/payment-intents/{paymentNo}/crypto-payment", paymentNo)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"asset\":\"USDT\",\"network\":\"ETHEREUM_SEPOLIA\","
+                                + "\"depositAddress\":\"0xMerchant\",\"expectedAmount\":\"25.00\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("WAITING_PAYMENT"));
+
+        mockMvc.perform(post("/api/mock/blockchain/transactions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"network\":\"ETHEREUM_SEPOLIA\",\"transactionHash\":\"0xtest\","
+                                + "\"asset\":\"USDT\",\"fromAddress\":\"0xCustomer\","
+                                + "\"toAddress\":\"0xMerchant\",\"amount\":\"25.00\",\"confirmed\":true}"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/payment-intents/{paymentNo}/refresh", paymentNo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactionHash").value("0xtest"))
+                .andExpect(jsonPath("$.status").value("SUCCEEDED"));
+
+        mockMvc.perform(get("/api/payment-intents/{paymentNo}", paymentNo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCEEDED"));
+    }
 }

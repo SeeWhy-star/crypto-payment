@@ -12,4 +12,7 @@ public record PaymentIntent(
         PaymentIntentStatus status,
         Instant createdAt
 ) {
+    public PaymentIntent withStatus(PaymentIntentStatus newStatus) {
+        return new PaymentIntent(paymentNo, amount, currency, newStatus, createdAt);
+    }
 }

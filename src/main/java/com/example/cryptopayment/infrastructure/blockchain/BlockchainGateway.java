@@ -1,0 +1,17 @@
+package com.example.cryptopayment.infrastructure.blockchain;
+
+import com.example.cryptopayment.domain.enums.CryptoNetwork;
+import com.example.cryptopayment.domain.enums.CryptoAsset;
+import com.example.cryptopayment.domain.model.CryptoTransaction;
+
+import java.util.Optional;
+import java.math.BigDecimal;
+
+public interface BlockchainGateway {
+    Optional<CryptoTransaction> findTransaction(CryptoNetwork network, String transactionHash);
+
+    Optional<CryptoTransaction> findMatchingTransaction(CryptoNetwork network, CryptoAsset asset,
+                                                         String toAddress, BigDecimal amount);
+
+    void recordTransaction(CryptoTransaction transaction);
+}
