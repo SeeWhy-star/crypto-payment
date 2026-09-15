@@ -39,6 +39,26 @@ class PaymentIntentControllerTest {
     }
 
     @Test
+    void shouldReturnSamePaymentIntentForRepeatedIdempotencyKey() throws Exception {
+        String key = "checkout-123";
+        String first = mockMvc.perform(post("/api/payment-intents")
+                        .header("Idempotency-Key", key)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"amount\":\"8.00\",\"currency\":\"USD\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String second = mockMvc.perform(post("/api/payment-intents")
+                        .header("Idempotency-Key", key)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"amount\":\"99.00\",\"currency\":\"EUR\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String firstPaymentNo = com.jayway.jsonpath.JsonPath.read(first, "$.paymentNo");
+        String secondPaymentNo = com.jayway.jsonpath.JsonPath.read(second, "$.paymentNo");
+        org.junit.jupiter.api.Assertions.assertEquals(firstPaymentNo, secondPaymentNo);
+    }
+
+    @Test
     void shouldRejectInvalidAmount() throws Exception {
         mockMvc.perform(post("/api/payment-intents")
                         .contentType(MediaType.APPLICATION_JSON)

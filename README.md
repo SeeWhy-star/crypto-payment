@@ -80,3 +80,12 @@ mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 ```
 
 数据库账号密码通过 `DB_USERNAME`、`DB_PASSWORD` 环境变量配置。示例密码仅用于本地学习，请勿用于生产环境或提交真实密码。
+
+## 幂等请求
+
+创建订单时可携带 `Idempotency-Key` 请求头。相同 key 在 24 小时内重复提交会返回同一个订单，不会重复创建。默认使用内存实现；启用 `redis` profile 后使用 Redis：
+
+```bash
+docker compose up -d redis
+mvn spring-boot:run -Dspring-boot.run.profiles=redis
+```
