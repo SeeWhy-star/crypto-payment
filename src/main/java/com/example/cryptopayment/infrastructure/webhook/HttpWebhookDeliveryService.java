@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 @Component
-@Profile("webhook")
+@Profile("webhook & !rabbitmq")
 public class HttpWebhookDeliveryService implements WebhookDeliveryService {
     private static final int MAX_ATTEMPTS = 3;
     private final RestClient restClient;
