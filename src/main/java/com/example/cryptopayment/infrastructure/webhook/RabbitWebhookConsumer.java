@@ -3,6 +3,7 @@ package com.example.cryptopayment.infrastructure.webhook;
 import com.example.cryptopayment.domain.model.WebhookEvent;
 import com.example.cryptopayment.domain.repository.WebhookEventDeduplicationStore;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.EnableRetry;
@@ -16,11 +17,14 @@ import org.springframework.stereotype.Component;
 public class RabbitWebhookConsumer {
     private final WebhookDeliveryService deliveryService;
     private final WebhookEventDeduplicationStore deduplicationStore;
+    private final RabbitTemplate rabbitTemplate;
 
     public RabbitWebhookConsumer(WebhookDeliveryService deliveryService,
-                                 WebhookEventDeduplicationStore deduplicationStore) {
+                                 WebhookEventDeduplicationStore deduplicationStore,
+                                 RabbitTemplate rabbitTemplate) {
         this.deliveryService = deliveryService;
         this.deduplicationStore = deduplicationStore;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @RabbitListener(queues = RabbitWebhookConfig.QUEUE)
@@ -34,6 +38,7 @@ public class RabbitWebhookConsumer {
 
     @Recover
     public void recover(RuntimeException exception, WebhookEvent event) {
-        // The failed event is acknowledged after retries; production systems should persist an alert/DLQ record.
+        rabbitTemplate.convertAndSend(RabbitWebhookConfig.DEAD_LETTER_EXCHANGE,
+                RabbitWebhookConfig.DEAD_LETTER_ROUTING_KEY, event);
     }
 }

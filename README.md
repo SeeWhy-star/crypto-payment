@@ -112,7 +112,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=rabbitmq
 
 配置 `webhook` profile 后，支付成功事件会向 `WEBHOOK_URL` 发起 HTTP POST；请求带有 `X-Webhook-Id`、`X-Webhook-Type` 和 `X-Webhook-Signature`，非 2xx 或网络异常最多重试 3 次。`WEBHOOK_SECRET` 仅从环境变量读取。
 
-启用 `rabbitmq,webhook` profile 时，事件会先进入 RabbitMQ 队列，再由消费者投递 HTTP；消费者自身失败也会指数退避重试 3 次。当前示例的最终失败处理留在日志/告警扩展点，后续可接入死信队列。
+启用 `rabbitmq,webhook` profile 时，事件会先进入 RabbitMQ 队列，再由消费者投递 HTTP；消费者自身失败会指数退避重试 3 次，仍失败的事件会进入持久化死信队列 `crypto-payment.webhook-delivery.failed`，可供人工重放或告警处理。
 
 消费者会按 `eventId` 做幂等去重：默认保存于内存，`redis` profile 保存到 Redis 7 天，RabbitMQ 重投同一事件不会重复发送 HTTP Webhook。
 

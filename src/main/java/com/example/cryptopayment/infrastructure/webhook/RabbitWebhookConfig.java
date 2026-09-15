@@ -13,6 +13,9 @@ import org.springframework.context.annotation.Profile;
 @Profile("rabbitmq")
 public class RabbitWebhookConfig {
     public static final String QUEUE = "crypto-payment.webhook-delivery";
+    public static final String DEAD_LETTER_EXCHANGE = "crypto-payment.webhooks.dlx";
+    public static final String DEAD_LETTER_QUEUE = "crypto-payment.webhook-delivery.failed";
+    public static final String DEAD_LETTER_ROUTING_KEY = "webhook.delivery.failed";
 
     @Bean
     TopicExchange webhookExchange() {
@@ -29,6 +32,24 @@ public class RabbitWebhookConfig {
         return BindingBuilder.bind(webhookQueue)
                 .to(webhookExchange)
                 .with(RabbitWebhookPublisher.ROUTING_KEY);
+    }
+
+    @Bean
+    TopicExchange webhookDeadLetterExchange() {
+        return new TopicExchange(DEAD_LETTER_EXCHANGE);
+    }
+
+    @Bean
+    Queue webhookDeadLetterQueue() {
+        return new Queue(DEAD_LETTER_QUEUE, true);
+    }
+
+    @Bean
+    Binding webhookDeadLetterBinding(Queue webhookDeadLetterQueue,
+                                    TopicExchange webhookDeadLetterExchange) {
+        return BindingBuilder.bind(webhookDeadLetterQueue)
+                .to(webhookDeadLetterExchange)
+                .with(DEAD_LETTER_ROUTING_KEY);
     }
 
     @Bean
