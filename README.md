@@ -2,12 +2,14 @@
 
 基于 Spring Boot 的区块链加密货币支付系统学习 Demo。
 
-当前阶段（第 4 阶段）支持 MySQL 持久化：默认仍使用内存存储，启用 `mysql` profile 后切换到 JPA/MySQL。
+当前版本已完成核心 Demo：订单与退款、Mock/ web3j 链上校验、MySQL 持久化、Redis 幂等与分布式锁、Webhook、RabbitMQ 重试/去重/DLQ。默认 profile 仍使用内存存储，按需启用基础设施 profile。
 
 ## 环境
 
 - Java 21
 - Maven 3.9+
+
+首次使用 Docker 时，可复制 `.env.example` 为本地 `.env` 并按需修改。`.env` 已被 Git 忽略，不要提交真实密码、RPC 地址或密钥。
 
 ## 运行
 
@@ -37,7 +39,7 @@ curl -X POST http://localhost:8080/api/payment-intents \
 curl http://localhost:8080/api/payment-intents/{paymentNo}
 ```
 
-金额使用 `BigDecimal`，订单状态使用枚举，当前新订单状态为 `CREATED`。内存存储会在应用重启后清空，后续阶段再替换为 MySQL。
+金额使用 `BigDecimal`，订单状态使用枚举，当前新订单状态为 `CREATED`。默认内存存储会在应用重启后清空；启用 `mysql` profile 后由 JPA/MySQL 持久化。
 
 ## Mock 区块链支付
 
@@ -79,6 +81,14 @@ docker compose up -d mysql
 mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 ```
 
+如果本机数据库密码不是默认占位符，请通过环境变量注入，例如 PowerShell：
+
+```powershell
+$env:DB_USERNAME = "crypto_payment"
+$env:DB_PASSWORD = "<你的本地密码>"
+mvn spring-boot:run "-Dspring-boot.run.profiles=mysql"
+```
+
 数据库账号密码通过 `DB_USERNAME`、`DB_PASSWORD` 环境变量配置。示例密码仅用于本地学习，请勿用于生产环境或提交真实密码。
 
 ## 幂等请求
@@ -99,7 +109,7 @@ $env:RPC_URL = "https://your-sepolia-rpc.example"
 mvn spring-boot:run "-Dspring-boot.run.profiles=mysql,redis,web3j"
 ```
 
-当前 web3j 网关只读取链上数据，不发送交易；USDT 的 ERC-20 Transfer 日志解析将在后续迭代加入。不要配置主网 RPC，也不要把 RPC URL、API key 或钱包私钥提交到 Git。
+当前 web3j 网关只读取链上数据，不发送交易，已支持原生 ETH 和 ERC-20 Transfer 日志解析。不要配置主网 RPC，也不要把 RPC URL、API key 或钱包私钥提交到 Git。
 
 ## Webhook
 
