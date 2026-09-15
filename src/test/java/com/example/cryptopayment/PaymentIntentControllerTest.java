@@ -127,5 +127,9 @@ class PaymentIntentControllerTest {
         mockMvc.perform(get("/api/payment-intents/{paymentNo}", paymentNo))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCEEDED"));
+
+        mockMvc.perform(post("/api/payment-intents/{paymentNo}/refresh", paymentNo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCEEDED"));
     }
 }

@@ -10,9 +10,12 @@ import com.example.cryptopayment.domain.repository.CryptoPaymentRepository;
 import com.example.cryptopayment.domain.repository.PaymentIntentRepository;
 import com.example.cryptopayment.infrastructure.blockchain.BlockchainGateway;
 import com.example.cryptopayment.dto.CreateCryptoPaymentRequest;
+import com.example.cryptopayment.domain.model.WebhookEvent;
+import com.example.cryptopayment.infrastructure.webhook.WebhookPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class CryptoPaymentApplicationService {
@@ -20,13 +23,16 @@ public class CryptoPaymentApplicationService {
     private final CryptoPaymentRepository cryptoPaymentRepository;
     private final PaymentIntentRepository paymentIntentRepository;
     private final BlockchainGateway blockchainGateway;
+    private final WebhookPublisher webhookPublisher;
 
     public CryptoPaymentApplicationService(CryptoPaymentRepository cryptoPaymentRepository,
                                             PaymentIntentRepository paymentIntentRepository,
-                                            BlockchainGateway blockchainGateway) {
+                                            BlockchainGateway blockchainGateway,
+                                            WebhookPublisher webhookPublisher) {
         this.cryptoPaymentRepository = cryptoPaymentRepository;
         this.paymentIntentRepository = paymentIntentRepository;
         this.blockchainGateway = blockchainGateway;
+        this.webhookPublisher = webhookPublisher;
     }
 
     public CryptoPayment configure(String paymentNo, CreateCryptoPaymentRequest request) {
@@ -70,6 +76,16 @@ public class CryptoPaymentApplicationService {
                     : status == CryptoPaymentStatus.FAILED ? PaymentIntentStatus.FAILED : PaymentIntentStatus.PROCESSING;
             paymentIntentRepository.save(intent.withStatus(intentStatus));
         });
+        if (status == CryptoPaymentStatus.SUCCEEDED
+                && payment.status() != CryptoPaymentStatus.SUCCEEDED) {
+            webhookPublisher.publish(new WebhookEvent(
+                    "evt_" + UUID.randomUUID().toString().replace("-", ""),
+                    "payment.succeeded",
+                    paymentNo,
+                    "{\"paymentNo\":\"" + paymentNo + "\",\"status\":\"SUCCEEDED\","
+                            + "\"transactionHash\":\"" + updated.transactionHash() + "\"}",
+                    Instant.now()));
+        }
         return updated;
     }
 

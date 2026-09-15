@@ -16,4 +16,8 @@ public class InMemoryWebhookPublisher implements WebhookPublisher {
     public void publish(WebhookEvent event) {
         events.add(event);
     }
+
+    public int size() {
+        return events.size();
+    }
 }
