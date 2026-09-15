@@ -131,5 +131,17 @@ class PaymentIntentControllerTest {
         mockMvc.perform(post("/api/payment-intents/{paymentNo}/refresh", paymentNo))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCEEDED"));
+
+        mockMvc.perform(post("/api/payment-intents/{paymentNo}/refunds", paymentNo)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"amount\":\"10.00\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("SUCCEEDED"));
+
+        mockMvc.perform(post("/api/payment-intents/{paymentNo}/refunds", paymentNo)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"amount\":\"20.00\"}"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.error").value("INVALID_REFUND"));
     }
 }

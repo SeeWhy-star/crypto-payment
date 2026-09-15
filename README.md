@@ -115,3 +115,15 @@ mvn spring-boot:run -Dspring-boot.run.profiles=rabbitmq
 启用 `rabbitmq,webhook` profile 时，事件会先进入 RabbitMQ 队列，再由消费者投递 HTTP；消费者自身失败也会指数退避重试 3 次。当前示例的最终失败处理留在日志/告警扩展点，后续可接入死信队列。
 
 消费者会按 `eventId` 做幂等去重：默认保存于内存，`redis` profile 保存到 Redis 7 天，RabbitMQ 重投同一事件不会重复发送 HTTP Webhook。
+
+## Mock 退款
+
+已成功的订单可以创建 Mock 退款：
+
+```bash
+curl -X POST http://localhost:8080/api/payment-intents/{paymentNo}/refunds \
+  -H "Content-Type: application/json" \
+  -d '{"amount":"10.00"}'
+```
+
+系统会校验订单必须为 `SUCCEEDED`，并且累计成功退款金额不能超过原订单金额。Mock 退款会立即变为 `SUCCEEDED`，暂不发送真实资金。
