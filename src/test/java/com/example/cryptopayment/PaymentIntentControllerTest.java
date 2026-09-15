@@ -67,6 +67,26 @@ class PaymentIntentControllerTest {
     }
 
     @Test
+    void shouldCreateDeterministicWebhookSignature() throws Exception {
+        String body = "{\"event\":\"payment.succeeded\"}";
+        String first = mockMvc.perform(post("/api/webhooks/sign")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"payload\":\"" + body.replace("\"", "\\\"")
+                                + "\",\"secret\":\"local-secret\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String second = mockMvc.perform(post("/api/webhooks/sign")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"payload\":\"" + body.replace("\"", "\\\"")
+                                + "\",\"secret\":\"local-secret\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String firstSignature = com.jayway.jsonpath.JsonPath.read(first, "$.signature");
+        String secondSignature = com.jayway.jsonpath.JsonPath.read(second, "$.signature");
+        org.junit.jupiter.api.Assertions.assertEquals(firstSignature, secondSignature);
+    }
+
+    @Test
     void shouldReturnNotFoundForUnknownPaymentIntent() throws Exception {
         mockMvc.perform(get("/api/payment-intents/pi_unknown"))
                 .andExpect(status().isNotFound())

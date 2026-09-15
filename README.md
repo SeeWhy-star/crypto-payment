@@ -100,3 +100,12 @@ mvn spring-boot:run "-Dspring-boot.run.profiles=mysql,redis,web3j"
 ```
 
 当前 web3j 网关只读取链上数据，不发送交易；USDT 的 ERC-20 Transfer 日志解析将在后续迭代加入。不要配置主网 RPC，也不要把 RPC URL、API key 或钱包私钥提交到 Git。
+
+## Webhook
+
+`POST /api/webhooks/sign` 使用 HMAC-SHA256 为回调 payload 生成签名。生产环境中 secret 只能来自安全配置，不能放在请求日志或 Git 中。RabbitMQ 发布器通过 `rabbitmq` profile 启用：
+
+```bash
+docker compose up -d rabbitmq
+mvn spring-boot:run -Dspring-boot.run.profiles=rabbitmq
+```
