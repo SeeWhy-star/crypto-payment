@@ -10,6 +10,11 @@ import java.math.BigDecimal;
 public interface BlockchainGateway {
     Optional<CryptoTransaction> findTransaction(CryptoNetwork network, String transactionHash);
 
+    default Optional<CryptoTransaction> findTransaction(CryptoNetwork network, String transactionHash,
+                                                         CryptoAsset asset, String tokenContract) {
+        return findTransaction(network, transactionHash);
+    }
+
     Optional<CryptoTransaction> findMatchingTransaction(CryptoNetwork network, CryptoAsset asset,
                                                          String tokenContract, String toAddress, BigDecimal amount);
 

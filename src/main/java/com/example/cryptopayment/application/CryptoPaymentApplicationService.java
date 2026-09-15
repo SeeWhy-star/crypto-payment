@@ -46,14 +46,16 @@ public class CryptoPaymentApplicationService {
         CryptoTransaction transaction = payment.transactionHash() == null
                 ? blockchainGateway.findMatchingTransaction(payment.network(), payment.asset(),
                 payment.tokenContract(), payment.depositAddress(), payment.expectedAmount()).orElse(null)
-                : blockchainGateway.findTransaction(payment.network(), payment.transactionHash()).orElse(null);
+                : blockchainGateway.findTransaction(payment.network(), payment.transactionHash(),
+                payment.asset(), payment.tokenContract()).orElse(null);
         if (transaction == null) {
             return payment;
         }
         CryptoPayment paymentWithTransaction = payment.transactionHash() == null
                 ? payment.withTransaction(transaction.transactionHash(), CryptoPaymentStatus.DETECTED) : payment;
         CryptoTransaction matchedTransaction = blockchainGateway.findTransaction(payment.network(),
-                paymentWithTransaction.transactionHash()).orElse(transaction);
+                paymentWithTransaction.transactionHash(), paymentWithTransaction.asset(),
+                paymentWithTransaction.tokenContract()).orElse(transaction);
         CryptoPaymentStatus status = matches(paymentWithTransaction, matchedTransaction)
                 ? (matchedTransaction.receiptSuccessful()
                 ? (matchedTransaction.confirmations() >= paymentWithTransaction.requiredConfirmations()
