@@ -83,7 +83,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 
 ## 幂等请求
 
-创建订单时可携带 `Idempotency-Key` 请求头。相同 key 在 24 小时内重复提交会返回同一个订单，不会重复创建。默认使用内存实现；启用 `redis` profile 后使用 Redis：
+创建订单时可携带 `Idempotency-Key` 请求头。相同 key 在 24 小时内重复提交会返回同一个订单，不会重复创建。默认使用内存实现；启用 `redis` profile 后使用 Redis，并通过 Redisson 分布式锁保护并发请求：
 
 ```bash
 docker compose up -d redis
