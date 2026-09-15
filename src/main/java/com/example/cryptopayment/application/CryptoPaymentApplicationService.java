@@ -16,6 +16,7 @@ import java.time.Instant;
 
 @Service
 public class CryptoPaymentApplicationService {
+    private static final int DEFAULT_CONFIRMATIONS = 2;
     private final CryptoPaymentRepository cryptoPaymentRepository;
     private final PaymentIntentRepository paymentIntentRepository;
     private final BlockchainGateway blockchainGateway;
@@ -33,7 +34,8 @@ public class CryptoPaymentApplicationService {
             throw new PaymentIntentNotFoundException(paymentNo);
         }
         CryptoPayment payment = new CryptoPayment(paymentNo, request.asset(), request.network(),
-                request.depositAddress().trim(), request.expectedAmount(), null,
+                request.depositAddress().trim(), request.expectedAmount(), request.tokenContract(),
+                DEFAULT_CONFIRMATIONS, null,
                 CryptoPaymentStatus.WAITING_PAYMENT, Instant.now());
         return cryptoPaymentRepository.save(payment);
     }
@@ -43,7 +45,7 @@ public class CryptoPaymentApplicationService {
                 .orElseThrow(() -> new CryptoPaymentNotFoundException(paymentNo));
         CryptoTransaction transaction = payment.transactionHash() == null
                 ? blockchainGateway.findMatchingTransaction(payment.network(), payment.asset(),
-                payment.depositAddress(), payment.expectedAmount()).orElse(null)
+                payment.tokenContract(), payment.depositAddress(), payment.expectedAmount()).orElse(null)
                 : blockchainGateway.findTransaction(payment.network(), payment.transactionHash()).orElse(null);
         if (transaction == null) {
             return payment;
@@ -53,7 +55,10 @@ public class CryptoPaymentApplicationService {
         CryptoTransaction matchedTransaction = blockchainGateway.findTransaction(payment.network(),
                 paymentWithTransaction.transactionHash()).orElse(transaction);
         CryptoPaymentStatus status = matches(paymentWithTransaction, matchedTransaction)
-                ? (matchedTransaction.confirmed() ? CryptoPaymentStatus.SUCCEEDED : CryptoPaymentStatus.CONFIRMING)
+                ? (matchedTransaction.receiptSuccessful()
+                ? (matchedTransaction.confirmations() >= paymentWithTransaction.requiredConfirmations()
+                ? CryptoPaymentStatus.SUCCEEDED : CryptoPaymentStatus.CONFIRMING)
+                : CryptoPaymentStatus.FAILED)
                 : CryptoPaymentStatus.FAILED;
         CryptoPayment updated = cryptoPaymentRepository.save(paymentWithTransaction.withTransaction(
                 paymentWithTransaction.transactionHash(), status));
@@ -73,6 +78,7 @@ public class CryptoPaymentApplicationService {
     private boolean matches(CryptoPayment payment, CryptoTransaction transaction) {
         return payment.asset() == transaction.asset()
                 && payment.depositAddress().equalsIgnoreCase(transaction.toAddress())
-                && payment.expectedAmount().compareTo(transaction.amount()) == 0;
+                && payment.expectedAmount().compareTo(transaction.amount()) == 0
+                && java.util.Objects.equals(payment.tokenContract(), transaction.tokenContract());
     }
 }

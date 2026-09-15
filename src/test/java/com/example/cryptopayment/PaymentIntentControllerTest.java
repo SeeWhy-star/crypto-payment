@@ -65,7 +65,8 @@ class PaymentIntentControllerTest {
         mockMvc.perform(post("/api/payment-intents/{paymentNo}/crypto-payment", paymentNo)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"asset\":\"USDT\",\"network\":\"ETHEREUM_SEPOLIA\","
-                                + "\"depositAddress\":\"0xMerchant\",\"expectedAmount\":\"25.00\"}"))
+                                + "\"depositAddress\":\"0xMerchant\",\"expectedAmount\":\"25.00\","
+                                + "\"tokenContract\":\"0xUsdt\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("WAITING_PAYMENT"));
 
@@ -73,7 +74,9 @@ class PaymentIntentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"network\":\"ETHEREUM_SEPOLIA\",\"transactionHash\":\"0xtest\","
                                 + "\"asset\":\"USDT\",\"fromAddress\":\"0xCustomer\","
-                                + "\"toAddress\":\"0xMerchant\",\"amount\":\"25.00\",\"confirmed\":true}"))
+                                + "\"toAddress\":\"0xMerchant\",\"amount\":\"25.00\","
+                                + "\"tokenContract\":\"0xUsdt\",\"blockNumber\":100,"
+                                + "\"confirmations\":2,\"receiptSuccessful\":true}"))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/payment-intents/{paymentNo}/refresh", paymentNo))

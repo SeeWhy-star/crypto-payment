@@ -11,7 +11,7 @@ public interface BlockchainGateway {
     Optional<CryptoTransaction> findTransaction(CryptoNetwork network, String transactionHash);
 
     Optional<CryptoTransaction> findMatchingTransaction(CryptoNetwork network, CryptoAsset asset,
-                                                         String toAddress, BigDecimal amount);
+                                                         String tokenContract, String toAddress, BigDecimal amount);
 
     void recordTransaction(CryptoTransaction transaction);
 }

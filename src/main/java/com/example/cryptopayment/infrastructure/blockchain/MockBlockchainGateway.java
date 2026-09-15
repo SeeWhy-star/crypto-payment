@@ -22,10 +22,11 @@ public class MockBlockchainGateway implements BlockchainGateway {
 
     @Override
     public Optional<CryptoTransaction> findMatchingTransaction(CryptoNetwork network, CryptoAsset asset,
-                                                                 String toAddress, BigDecimal amount) {
+                                                                 String tokenContract, String toAddress, BigDecimal amount) {
         return transactions.values().stream()
                 .filter(transaction -> transaction.network() == network)
                 .filter(transaction -> transaction.asset() == asset)
+                .filter(transaction -> java.util.Objects.equals(transaction.tokenContract(), tokenContract))
                 .filter(transaction -> transaction.toAddress().equalsIgnoreCase(toAddress))
                 .filter(transaction -> transaction.amount().compareTo(amount) == 0)
                 .findFirst();

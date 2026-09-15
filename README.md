@@ -2,7 +2,7 @@
 
 基于 Spring Boot 的区块链加密货币支付系统学习 Demo。
 
-当前阶段（第 2 阶段）实现 Mock 区块链支付：配置资产和网络，模拟链上交易，并刷新支付状态。数据仍使用内存存储。
+当前阶段（第 3 阶段）实现链上交易校验模型：校验资产、网络、合约、地址、金额、Receipt 成功状态和最低确认数。数据仍使用内存存储。
 
 ## 环境
 
@@ -63,4 +63,4 @@ curl -X POST http://localhost:8080/api/mock/blockchain/transactions \
 curl -X POST http://localhost:8080/api/payment-intents/{paymentNo}/refresh
 ```
 
-刷新会校验网络、资产、收款地址和金额，匹配后才会将支付标记为 `SUCCEEDED`。Mock 网关通过接口抽象，后续可以替换为 web3j 测试网实现。
+刷新会校验网络、资产、代币合约、收款地址、金额和 Receipt 成功状态；交易确认数达到最低要求（当前为 2）后才会将支付标记为 `SUCCEEDED`。Mock 网关通过接口抽象，后续可以替换为 web3j 测试网实现。

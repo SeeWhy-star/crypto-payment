@@ -15,6 +15,9 @@ public record CreateMockTransactionRequest(
         @NotBlank String fromAddress,
         @NotBlank String toAddress,
         @NotNull @DecimalMin("0.00000001") BigDecimal amount,
-        boolean confirmed
+        String tokenContract,
+        long blockNumber,
+        int confirmations,
+        boolean receiptSuccessful
 ) {
 }

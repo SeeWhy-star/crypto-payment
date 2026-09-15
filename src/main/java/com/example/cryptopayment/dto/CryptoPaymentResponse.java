@@ -14,13 +14,16 @@ public record CryptoPaymentResponse(
         CryptoNetwork network,
         String depositAddress,
         BigDecimal expectedAmount,
+        String tokenContract,
+        int requiredConfirmations,
         String transactionHash,
         CryptoPaymentStatus status,
         Instant createdAt
 ) {
     public static CryptoPaymentResponse from(CryptoPayment payment) {
         return new CryptoPaymentResponse(payment.paymentNo(), payment.asset(), payment.network(),
-                payment.depositAddress(), payment.expectedAmount(), payment.transactionHash(),
+                payment.depositAddress(), payment.expectedAmount(), payment.tokenContract(),
+                payment.requiredConfirmations(), payment.transactionHash(),
                 payment.status(), payment.createdAt());
     }
 }

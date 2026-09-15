@@ -12,6 +12,9 @@ public record CryptoTransaction(
         String fromAddress,
         String toAddress,
         BigDecimal amount,
-        boolean confirmed
+        String tokenContract,
+        long blockNumber,
+        int confirmations,
+        boolean receiptSuccessful
 ) {
 }

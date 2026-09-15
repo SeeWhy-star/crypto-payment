@@ -38,6 +38,7 @@ public class CryptoPaymentController {
     @ResponseStatus(HttpStatus.CREATED)
     public void recordTransaction(@Valid @RequestBody CreateMockTransactionRequest request) {
         service.recordMockTransaction(new CryptoTransaction(request.network(), request.transactionHash(),
-                request.asset(), request.fromAddress(), request.toAddress(), request.amount(), request.confirmed()));
+                request.asset(), request.fromAddress(), request.toAddress(), request.amount(),
+                request.tokenContract(), request.blockNumber(), request.confirmations(), request.receiptSuccessful()));
     }
 }

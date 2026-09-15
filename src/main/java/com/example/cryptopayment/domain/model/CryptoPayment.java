@@ -13,12 +13,14 @@ public record CryptoPayment(
         CryptoNetwork network,
         String depositAddress,
         BigDecimal expectedAmount,
+        String tokenContract,
+        int requiredConfirmations,
         String transactionHash,
         CryptoPaymentStatus status,
         Instant createdAt
 ) {
     public CryptoPayment withTransaction(String hash, CryptoPaymentStatus newStatus) {
         return new CryptoPayment(paymentNo, asset, network, depositAddress, expectedAmount,
-                hash, newStatus, createdAt);
+                tokenContract, requiredConfirmations, hash, newStatus, createdAt);
     }
 }

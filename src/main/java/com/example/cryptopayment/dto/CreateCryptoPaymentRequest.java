@@ -12,6 +12,7 @@ public record CreateCryptoPaymentRequest(
         @NotNull CryptoAsset asset,
         @NotNull CryptoNetwork network,
         @NotBlank String depositAddress,
-        @NotNull @DecimalMin("0.00000001") BigDecimal expectedAmount
+        @NotNull @DecimalMin("0.00000001") BigDecimal expectedAmount,
+        String tokenContract
 ) {
 }
