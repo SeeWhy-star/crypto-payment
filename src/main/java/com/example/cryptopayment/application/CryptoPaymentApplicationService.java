@@ -12,6 +12,7 @@ import com.example.cryptopayment.infrastructure.blockchain.BlockchainGateway;
 import com.example.cryptopayment.dto.CreateCryptoPaymentRequest;
 import com.example.cryptopayment.domain.model.WebhookEvent;
 import com.example.cryptopayment.infrastructure.webhook.WebhookPublisher;
+import com.example.cryptopayment.infrastructure.webhook.WebhookDeliveryService;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -24,15 +25,18 @@ public class CryptoPaymentApplicationService {
     private final PaymentIntentRepository paymentIntentRepository;
     private final BlockchainGateway blockchainGateway;
     private final WebhookPublisher webhookPublisher;
+    private final WebhookDeliveryService webhookDeliveryService;
 
     public CryptoPaymentApplicationService(CryptoPaymentRepository cryptoPaymentRepository,
                                             PaymentIntentRepository paymentIntentRepository,
                                             BlockchainGateway blockchainGateway,
-                                            WebhookPublisher webhookPublisher) {
+                                            WebhookPublisher webhookPublisher,
+                                            WebhookDeliveryService webhookDeliveryService) {
         this.cryptoPaymentRepository = cryptoPaymentRepository;
         this.paymentIntentRepository = paymentIntentRepository;
         this.blockchainGateway = blockchainGateway;
         this.webhookPublisher = webhookPublisher;
+        this.webhookDeliveryService = webhookDeliveryService;
     }
 
     public CryptoPayment configure(String paymentNo, CreateCryptoPaymentRequest request) {
@@ -78,13 +82,15 @@ public class CryptoPaymentApplicationService {
         });
         if (status == CryptoPaymentStatus.SUCCEEDED
                 && payment.status() != CryptoPaymentStatus.SUCCEEDED) {
-            webhookPublisher.publish(new WebhookEvent(
+            WebhookEvent webhookEvent = new WebhookEvent(
                     "evt_" + UUID.randomUUID().toString().replace("-", ""),
                     "payment.succeeded",
                     paymentNo,
                     "{\"paymentNo\":\"" + paymentNo + "\",\"status\":\"SUCCEEDED\","
                             + "\"transactionHash\":\"" + updated.transactionHash() + "\"}",
-                    Instant.now()));
+                    Instant.now());
+            webhookPublisher.publish(webhookEvent);
+            webhookDeliveryService.deliver(webhookEvent);
         }
         return updated;
     }

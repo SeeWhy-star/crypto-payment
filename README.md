@@ -109,3 +109,5 @@ mvn spring-boot:run "-Dspring-boot.run.profiles=mysql,redis,web3j"
 docker compose up -d rabbitmq
 mvn spring-boot:run -Dspring-boot.run.profiles=rabbitmq
 ```
+
+配置 `webhook` profile 后，支付成功事件会向 `WEBHOOK_URL` 发起 HTTP POST；请求带有 `X-Webhook-Id`、`X-Webhook-Type` 和 `X-Webhook-Signature`，非 2xx 或网络异常最多重试 3 次。`WEBHOOK_SECRET` 仅从环境变量读取。
